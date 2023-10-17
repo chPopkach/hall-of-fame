@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HallOfFame.Models
+namespace HallOfFame
 {
-    public class PersonModelCreate
+    public class PersonDTO
     {
         [Required]
         [MaxLength(100)]
@@ -12,6 +12,6 @@ namespace HallOfFame.Models
         [MaxLength(100)]
         public string DisplayName { get; set; }
 
-        public List<SkillModelCreate> Skills { get; set; }
+        public List<SkillDTO> Skills { get; set; }
     }
 }

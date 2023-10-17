@@ -1,17 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace HallOfFame.Models
+namespace HallOfFame
 {
-    public class SkillModelCreate
+    public class SkillDTO
     {
         [Required]
         [MaxLength(50)]
         public string Name { get; set; }
 
         [Required]
+        [Range(1, 10)]
         public byte Level { get; set; }
-
-        [Required]
-        public int PersonId { get; set; }
     }
 }

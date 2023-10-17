@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using System.Reflection.Metadata;
+﻿using HallOfFame.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace HallOfFame.Models
+namespace HallOfFame
 {
     public class ContextDb : DbContext
     {

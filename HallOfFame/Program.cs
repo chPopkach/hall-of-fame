@@ -1,6 +1,8 @@
-
-using HallOfFame.Models;
+using HallOfFame.Interfaces;
+using HallOfFame.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using System.Text.Json.Serialization;
 
 namespace HallOfFame
 {
@@ -10,31 +12,29 @@ namespace HallOfFame
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
-            builder.Services.AddControllers();
-
-            builder.Services.AddControllersWithViews()
-                            .AddNewtonsoftJson(options =>
-                            options.SerializerSettings.ReferenceLoopHandling =
-                            Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+            builder.Services.AddControllers().AddJsonOptions(options =>
+                                             options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
             builder.Services.AddDbContext<ContextDb>(options =>
             {
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
-                //options.UseLazyLoadingProxies();
-            });
+            });  
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            builder.Services.AddTransient<IHallOfFameRepository, HallOfFameRepository>();
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen();            
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
                 app.UseSwaggerUI();
+            }
+
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetRequiredService<ContextDb>();
+                db.Database.Migrate();
             }
 
             app.UseHttpsRedirection();

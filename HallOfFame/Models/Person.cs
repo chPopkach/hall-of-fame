@@ -1,5 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore.Infrastructure;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace HallOfFame.Models
 {
@@ -15,6 +17,6 @@ namespace HallOfFame.Models
         [MaxLength(100)]
         public string DisplayName { get; set; }
 
-        public List<Skill> Skills { get; set; }
+        public virtual List<Skill>? Skills { get; set; }
     }
 }

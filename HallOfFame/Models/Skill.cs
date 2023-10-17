@@ -1,6 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace HallOfFame.Models
 {
@@ -13,11 +12,12 @@ namespace HallOfFame.Models
         public string Name { get; set; }
 
         [Required]
+        [Range(1, 10)]
         public byte Level { get; set; }
 
         [Required]
         public int PersonId { get; set; }
 
-        public Person Person { get; set; }
+        public virtual Person? Person { get; set; } = null;
     }
 }

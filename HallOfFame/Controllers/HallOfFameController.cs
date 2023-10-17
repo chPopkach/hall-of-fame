@@ -1,116 +1,90 @@
-﻿using HallOfFame.Models;
+﻿using HallOfFame.Interfaces;
+using HallOfFame.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.Data;
 using System.Runtime.CompilerServices;
 
 namespace HallOfFame.Controllers
 {
-    [Route("[controller]/api/v1/")]
+    [Route("api/v1/persons")]
     public class HallOfFameController : Controller
     {
-        private readonly ContextDb _context;
+        IHallOfFameRepository repository;
 
-        public HallOfFameController(ContextDb context)
+        public HallOfFameController(IHallOfFameRepository hallOfFameRepository)
         {
-            _context = context;
+            repository = hallOfFameRepository;
         }
 
-        [HttpGet]
-        public IEnumerable<Person> Get() => _context.Persons.Include(q => q.Skills).ToList();
+        [HttpGet(Name = "GetAllPersons")]
+        public IEnumerable<Person> Get() => repository.Get();
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetPerson")]
         public IActionResult Get(int id)
         {
-            var person = _context.Persons.Include(q => q.Skills).FirstOrDefault(q => q.Id == id);
+            try
+            {
+                var person = repository.Get(id);
 
-            if (person == null) return NotFound();
-
-            return Ok(person);
+                return Ok(person);
+            }
+            catch (Exception e)
+            {
+                return NotFound(e.Message);
+            }
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(int id)
         {
-            var skillsPerson = _context.Skills.Where(q => q.PersonId == id).ToList();
-            var deletedPerson = _context.Persons.FirstOrDefault(q => q.Id == id);
-
-            if (skillsPerson == null || deletedPerson == null) return NotFound();
-
-            foreach (var item in skillsPerson)
+            try
             {
-                _context.Skills.Remove(item);
+                repository.Delete(id);
+                return Ok();
             }
-
-            _context.Persons.Remove(deletedPerson);
-            _context.SaveChanges();
-
-            return Ok(deletedPerson);
+            catch (Exception e)
+            {
+                return NotFound(e.Message);
+            }
+            
         }
 
         [HttpPost]
-        public IActionResult Post([FromBody] PersonModelCreate personModelCreate)
+        public IActionResult Post([FromBody] PersonDTO personModelCreate)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            if (personModelCreate == null) return BadRequest();
+
+            try
             {
-                return BadRequest(ModelState);
+                repository.Create(personModelCreate);
+                return Ok();
             }
-
-            var person = new Person 
-            { 
-                Name = personModelCreate.Name,
-                DisplayName = personModelCreate.DisplayName,
-                Skills = new List<Skill>()
-            };
-
-            foreach (var item in personModelCreate.Skills)
+            catch (Exception e)
             {
-                Skill skill = new Skill();
-                skill.Name = item.Name;
-                skill.Level = item.Level;
-                skill.PersonId = _context.Persons.Max(q => q.Id) + 1;
-
-                person.Skills.Add(skill);
+                return BadRequest(e.Message);
             }
-
-            _context.Persons.Add(person);
-            _context.Skills.AddRange(person.Skills);
-            _context.SaveChanges();
-
-            return CreatedAtAction(nameof(Get), person);
         }
 
         [HttpPut]
-        public IActionResult Put(int id, [FromBody] PersonModelCreate personModelUpdate)
+        public IActionResult Put([Required] int id, [FromBody] PersonDTO personModelUpdate)
         {
-            if (!ModelState.IsValid)
+            if (!ModelState.IsValid) return BadRequest(ModelState);
+
+            if (personModelUpdate == null) return BadRequest();
+
+            try
             {
-                return BadRequest(ModelState);
+                repository.Update(id, personModelUpdate);
+                return Ok();
             }
-
-            var person = _context.Persons.Include(q => q.Skills).FirstOrDefault(q => q.Id == id);
-
-            person.Name = personModelUpdate.Name;
-            person.DisplayName = personModelUpdate.DisplayName;
-
-            _context.Skills.RemoveRange(person.Skills);
-
-            person.Skills = new List<Skill>();
-            foreach (var item in personModelUpdate.Skills)
+            catch (Exception e)
             {
-                Skill skill = new Skill();
-                skill.Name = item.Name;
-                skill.Level = item.Level;
-                skill.PersonId = _context.Persons.Max(q => q.Id) + 1;
-
-                person.Skills.Add(skill);
+                return BadRequest(e.Message);
             }
-
-            _context.Persons.Update(person);
-            _context.Skills.AddRange(person.Skills);
-            _context.SaveChanges();
-
-            return Ok(personModelUpdate);
         }
     }
 }
